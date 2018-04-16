@@ -32,7 +32,7 @@ let holdC;
 let classVals=[];
 let cv;
 var color = d3.scaleOrdinal(d3.schemeCategory10);
-d3.text('/authentic.csv',(e,text)=>{
+d3.text('/data3.csv',(e,text)=>{
     let dat = text.split('\n');
     let columns = dat.shift().split(',');
     dat = dat.join('\n');    
@@ -234,6 +234,8 @@ function cluster(a1, a2, data,numclusters){
             count++;
         },100*delayC)
         pCentre = centres;
+        console.log(centres);
+        
         centres = calcNewCentres(clusters);
         if(!aequal(pCentre, centres)){
             clusters.forEach((c,i)=>{
