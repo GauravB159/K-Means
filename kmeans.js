@@ -20,24 +20,31 @@ var svg = d3.select('body')
 var yScale = d3.scaleLinear()
     .range([height, 0]);
 
-// square root scale.
 var radius = d3.scaleSqrt()
     .range([1,3]);
-var normalize1 = d3.scaleLinear().range([0,1])
-var normalize2 = d3.scaleLinear().range([0,1])
-// the axes are much cleaner and easier now. No need to rotate and orient the axis, just call axisBottom, axisLeft etc.
+var normalize = d3.scaleLinear().range([0,1])
 var xAxis = d3.axisBottom()
     .scale(xScale);
 
 var yAxis = d3.axisLeft()
     .scale(yScale);
 let holdC;
-// again scaleOrdinal
+let classVals=[];
+let cv;
 var color = d3.scaleOrdinal(d3.schemeCategory10);
-d3.text('/data3.csv',(e,text)=>{
-    var data = d3.csvParseRows(text, function(d) {
+d3.text('/authentic.csv',(e,text)=>{
+    let dat = text.split('\n');
+    let columns = dat.shift().split(',');
+    dat = dat.join('\n');    
+    var data = d3.csvParseRows(dat, function(d) {
+        if(columns.join(',').indexOf('Class') !== -1){
+            let cval = d.splice(-1);
+            classVals.push(parseInt(cval[0]));
+        }
         return d.map(Number);
     });
+
+    cv = new Set(classVals);
     let controls = document.getElementById('controls');
     let x = document.createElement('select');
     x.value = 0;
@@ -47,7 +54,7 @@ d3.text('/data3.csv',(e,text)=>{
         let y = document.createElement('option');
         y.value = i;
         y.name = i;
-        y.innerHTML = "Attribute " +(i+1);
+        y.innerHTML = columns[i];
         y.className = "option-x"
         if(i === 0){
             y.selected = "selected";
@@ -59,7 +66,7 @@ d3.text('/data3.csv',(e,text)=>{
         if(i === 1){
             y.selected = "selected";
         }
-        y.innerHTML = "Attribute " +(i+1);
+        y.innerHTML = columns[i];
         y.className = "option-y"
         z.appendChild(y);
     }
@@ -82,28 +89,30 @@ d3.text('/data3.csv',(e,text)=>{
             return val.value;
         })
         count = 0;
-        svg.selectAll('.bubble').remove();
+        svg.selectAll('.value').remove();
         svg.selectAll('.centre').remove();
         let numclusters = parseInt(document.getElementById('numclusters').value);        
         cluster(parseInt(vals[0]),parseInt(vals[1]), data,numclusters)
     })
     controls.appendChild(w);
 
-    normalize1.domain(d3.extent(data, function(d){
+    for(let i = 0; i < data[0].length;i++){
+        normalize.domain(d3.extent(data, function(d){
+            return d[i];
+        })).nice();
+        data.forEach((d,j)=>{
+            data[j][i] = normalize(data[j][i])
+        })
+    }    
+    xScale.domain(d3.extent(data, function(d){
         return d[0];
     })).nice();
-    normalize2.domain(d3.extent(data, function(d){
-        return d[1];
-    })).nice();
-    xScale.domain(d3.extent(data, function(d){
-        return normalize1(d[0]);
-    })).nice();
     yScale.domain(d3.extent(data, function(d){
-        return normalize2(d[1]);
+        return d[1];
     })).nice();
 
     radius.domain(d3.extent(data, function(d){
-        return normalize1(d[0]);
+        return d[0];
     })).nice();
     svg.append('g')
         .attr('transform', 'translate(0,' + height + ')')
@@ -117,12 +126,13 @@ d3.text('/data3.csv',(e,text)=>{
     cluster(0,1, data,k);
 });
 
-function cluster(a1, a2, data,numclusters){    
+function cluster(a1, a2, data,numclusters){  
+    
     xScale.domain(d3.extent(data, function(d){
-        return normalize1(d[a1]);
+        return d[a1];
     })).nice();
     yScale.domain(d3.extent(data, function(d){
-        return normalize2(d[a2]);
+        return d[a2];
     })).nice();
     let clusters=[];
     let picked = [];
@@ -151,14 +161,36 @@ function cluster(a1, a2, data,numclusters){
         selectedArr.push(selected);
         clusters[selected].push(d);
     })
-    var bubble = svg.selectAll('.bubble')
+    var bubble = svg.selectAll('.value')
     .data(data)
-    .enter().append('circle')
-    .attr('class', 'bubble')
-    .attr('cx', function(d){return xScale(normalize1(d[a1]));})
-    .attr('cy', function(d){ return yScale(normalize2(d[a2])); })
-    .attr('r', "3px")
+    .enter().filter((d,i)=>{
+        if(cv.size > 2 || classVals.length === 0 || classVals[i] === 0)
+            return true;
+        else
+            return false;
+    }).append('circle')
+    .attr('class', 'value bubble')
+    .attr('cx', function(d){return xScale(d[a1]);})
+    .attr('cy', function(d){ return yScale(d[a2]); })
+    .attr('r', "4px")
+    .style('stroke','black')
     .style('fill', function(d,i){ return color(selectedArr[i]); })
+
+    var bubble = svg.selectAll('.value')
+    .data(data)
+    .enter().filter((d,i)=>{
+        if(classVals[i] === 1)
+            return true;
+        else
+            return false;
+    }).append('rect')
+    .attr('class', 'value squares')
+    .attr('x', function(d){return xScale(d[a1]);})
+    .attr('y', function(d){ return yScale(d[a2]); })
+    .attr('height', "8px")
+    .attr('width', "8px")
+    .style('fill', function(d,i){ return color(selectedArr[i]); })
+    .style('stroke','black')
     .style('opacity',opacity);
     let delayC = 0;
     while(!aequal(pCentre, centres)){
@@ -182,23 +214,23 @@ function cluster(a1, a2, data,numclusters){
             .data(centresArr[count])
             .enter().append('circle')
             .attr('class', 'centre')
-            .attr('cx', function(d){return xScale(normalize1(d[a1]));})
-            .attr('cy', function(d){ return yScale(normalize2(d[a2])); })
+            .attr('cx', function(d){return xScale(d[a1]);})
+            .attr('cy', function(d){ return yScale(d[a2]); })
             .attr('r', "10px")
             .style('fill', "black")
             .style('opacity',opacity);
             count++;
         }
         setTimeout(()=>{
-            svg.selectAll('.bubble')
+            svg.selectAll('.value')
             .data(data)
             .style('fill', function(d,i){ return color(selectedArr[i]); })
             .style('opacity',opacity);
 
             svg.selectAll('.centre')
             .data(centresArr[count])
-            .attr('cx', function(d){return xScale(normalize1(d[a1]));})
-            .attr('cy', function(d){ return yScale(normalize2(d[a2]));})
+            .attr('cx', function(d){return xScale(d[a1]);})
+            .attr('cy', function(d){ return yScale(d[a2]);})
             count++;
         },100*delayC)
         pCentre = centres;
