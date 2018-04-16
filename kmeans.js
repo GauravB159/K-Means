@@ -161,37 +161,44 @@ function cluster(a1, a2, data,numclusters){
         selectedArr.push(selected);
         clusters[selected].push(d);
     })
+    let temp = [];
+    // var sq = svg.selectAll('.value')
+    //     .data(data)
+    //     .enter().filter((d,i)=>{
+    //         if(classVals[i] === 1){
+    //             temp.push(i);
+    //             return true;
+    //         }
+    //         else{
+    //             return false;
+    //         }
+    //     }).append('rect')
+    //     .attr('class', 'value squares')
+    //     .attr('x', function(d){return xScale(d[a1]);})
+    //     .attr('y', function(d){ return yScale(d[a2]); })
+    //     .attr('height', "8px")
+    //     .attr('width', "8px")
+    //     .style('fill', function(d,i){ return color(selectedArr[temp[i]]); })
+    //     .style('stroke','black')
+    //     .style('opacity',opacity);
+    // temp = [];
     var bubble = svg.selectAll('.value')
     .data(data)
-    .enter().filter((d,i)=>{
-        if(cv.size > 2 || classVals.length === 0 || classVals[i] === 0)
+    .enter().filter((d,i)=>{        
+        if(true){
+            temp.push(i);
             return true;
-        else
-            return false;
+        }else{
+            return false
+        };
     }).append('circle')
     .attr('class', 'value bubble')
-    .attr('cx', function(d){return xScale(d[a1]);})
+    .attr('cx', function(d){ return xScale(d[a1]);})
     .attr('cy', function(d){ return yScale(d[a2]); })
     .attr('r', "4px")
     .style('stroke','black')
-    .style('fill', function(d,i){ return color(selectedArr[i]); })
+    .style('fill', function(d,i){ return color(selectedArr[temp[i]]);}) 
 
-    var bubble = svg.selectAll('.value')
-    .data(data)
-    .enter().filter((d,i)=>{
-        if(classVals[i] === 1)
-            return true;
-        else
-            return false;
-    }).append('rect')
-    .attr('class', 'value squares')
-    .attr('x', function(d){return xScale(d[a1]);})
-    .attr('y', function(d){ return yScale(d[a2]); })
-    .attr('height', "8px")
-    .attr('width', "8px")
-    .style('fill', function(d,i){ return color(selectedArr[i]); })
-    .style('stroke','black')
-    .style('opacity',opacity);
     let delayC = 0;
     while(!aequal(pCentre, centres)){
         delayC++;
@@ -234,7 +241,6 @@ function cluster(a1, a2, data,numclusters){
             count++;
         },100*delayC)
         pCentre = centres;
-        console.log(centres);
         
         centres = calcNewCentres(clusters);
         if(!aequal(pCentre, centres)){
