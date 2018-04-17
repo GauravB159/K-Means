@@ -20,8 +20,6 @@ var svg = d3.select('body')
 var yScale = d3.scaleLinear()
     .range([height, 0]);
 
-var radius = d3.scaleSqrt()
-    .range([1,3]);
 var normalize = d3.scaleLinear().range([0,1])
 var xAxis = d3.axisBottom()
     .scale(xScale);
@@ -32,7 +30,7 @@ let holdC;
 let classVals=[];
 let cv;
 var color = d3.scaleOrdinal(d3.schemeCategory10);
-d3.text('/data.csv',(e,text)=>{
+d3.text('/data4.csv',(e,text)=>{
     let dat = text.split('\n');
     let columns = dat.shift().split(',');
     dat = dat.join('\n');    
