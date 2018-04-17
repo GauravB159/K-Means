@@ -32,7 +32,7 @@ let holdC;
 let classVals=[];
 let cv;
 var color = d3.scaleOrdinal(d3.schemeCategory10);
-d3.text('/data3.csv',(e,text)=>{
+d3.text('/data.csv',(e,text)=>{
     let dat = text.split('\n');
     let columns = dat.shift().split(',');
     dat = dat.join('\n');    
@@ -111,9 +111,6 @@ d3.text('/data3.csv',(e,text)=>{
         return d[1];
     })).nice();
 
-    radius.domain(d3.extent(data, function(d){
-        return d[0];
-    })).nice();
     svg.append('g')
         .attr('transform', 'translate(0,' + height + ')')
         .attr('class', 'x axis')
@@ -161,43 +158,16 @@ function cluster(a1, a2, data,numclusters){
         selectedArr.push(selected);
         clusters[selected].push(d);
     })
-    let temp = [];
-    // var sq = svg.selectAll('.value')
-    //     .data(data)
-    //     .enter().filter((d,i)=>{
-    //         if(classVals[i] === 1){
-    //             temp.push(i);
-    //             return true;
-    //         }
-    //         else{
-    //             return false;
-    //         }
-    //     }).append('rect')
-    //     .attr('class', 'value squares')
-    //     .attr('x', function(d){return xScale(d[a1]);})
-    //     .attr('y', function(d){ return yScale(d[a2]); })
-    //     .attr('height', "8px")
-    //     .attr('width', "8px")
-    //     .style('fill', function(d,i){ return color(selectedArr[temp[i]]); })
-    //     .style('stroke','black')
-    //     .style('opacity',opacity);
-    // temp = [];
     var bubble = svg.selectAll('.value')
     .data(data)
-    .enter().filter((d,i)=>{        
-        if(true){
-            temp.push(i);
-            return true;
-        }else{
-            return false
-        };
-    }).append('circle')
+    .enter()
+    .append('circle')
     .attr('class', 'value bubble')
-    .attr('cx', function(d){ return xScale(d[a1]);})
+    .attr('cx', function(d){ return xScale(d[a1]); })
     .attr('cy', function(d){ return yScale(d[a2]); })
     .attr('r', "4px")
     .style('stroke','black')
-    .style('fill', function(d,i){ return color(selectedArr[temp[i]]);}) 
+    .style('fill', function(d,i){ return color(selectedArr[i]);}) 
 
     let delayC = 0;
     while(!aequal(pCentre, centres)){
